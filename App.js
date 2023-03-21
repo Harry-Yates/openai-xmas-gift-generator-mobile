@@ -1,7 +1,19 @@
 import { React } from "react";
 import { useState } from "react";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, TextInput, Pressable, SafeAreaView } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  Pressable,
+  SafeAreaView,
+  Alert,
+  Image
+} from "react-native";
+import loadingGif from "./assets/loading.gif";
+
+const API_URL = `https://openai-xmas-list.vercel.app/api`;
 
 export default function App() {
   const [gender, setGender] = useState("man");
@@ -30,11 +42,36 @@ export default function App() {
       const data = await response.json();
       setResult(data.result);
     } catch (e) {
-      Alert.alert("Couldn't generate ideas", e.message);
+      Alert.alert("Failed to generate gift ideas. Try later", e.message);
     } finally {
       setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.title}>Looking for the best gift ideas</Text>
+        <Image source={loadingGif} style={styles.loading} resizeMode='contain' />
+      </View>
+    );
+  }
+
+  const onTryAgain = () => {
+    setResult("");
+  };
+
+  if (result) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.title}>Here are some great Christmas gift ideas</Text>
+        <Text style={styles.result}>{result}</Text>
+        <Pressable onPress={onTryAgain} style={styles.button}>
+          <Text style={styles.buttonText}>Try again</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -59,7 +96,7 @@ export default function App() {
           keyboardType='numeric'
           style={styles.input}
           value={age.toString()}
-          onChangeText={(s) => setAge(Number.parseInt(s))}
+          onChangeText={(s) => setAge(Number.parseInt(s || "0"))}
         />
 
         <Text style={styles.label}>Price from (£)</Text>
@@ -68,7 +105,7 @@ export default function App() {
           keyboardType='numeric'
           style={styles.input}
           value={priceMin.toString()}
-          onChangeText={(s) => setPriceMin(Number.parseInt(s))}
+          onChangeText={(s) => setPriceMin(Number.parseInt(s || "0"))}
         />
 
         <Text style={styles.label}>Price to (£)</Text>
@@ -77,7 +114,7 @@ export default function App() {
           keyboardType='numeric'
           style={styles.input}
           value={priceMax.toString()}
-          onChangeText={(s) => setPriceMax(Number.parseInt(s))}
+          onChangeText={(s) => setPriceMax(Number.parseInt(s || "0"))}
         />
 
         <Text style={styles.label}>Hobbies</Text>
@@ -103,7 +140,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     justifyContent: "center",
-    padding: 10
+    margin: 10
+  },
+
+  title: {
+    fontSize: 22,
+    fontWeight: "bold"
   },
 
   input: {
@@ -148,8 +190,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginVertical: 6
   },
+
   buttonText: {
     color: "white",
     fontWeight: "bold"
+  },
+
+  //loading
+
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+    padding: 10
+  },
+  loading: {
+    width: "100%"
   }
 });
